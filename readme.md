@@ -23,7 +23,7 @@
   - add dependencies and scripts to existing project
   - create components
   - create containers (with selection from a list of existing components)
-  - translate HTML to snabbdom
   - create actions (ramtastic doesn't need reducers)
+  - translate HTML to snabbdom
 - Parcel
 - Usage documentation
