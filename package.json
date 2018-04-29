@@ -1,0 +1,31 @@
+{
+  "name": "ramtastic",
+  "version": "0.0.2",
+  "description": "Ramda + Snabbdom = Fantastic!",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "parcel index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaqmol/ramtastic.git"
+  },
+  "keywords": [
+    "ramdajs",
+    "snabbdomjs"
+  ],
+  "author": "Ronny Reichmann",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jaqmol/ramtastic/issues"
+  },
+  "homepage": "https://github.com/jaqmol/ramtastic#readme",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "jest": "^22.4.3",
+    "ramda": "^0.25.0",
+    "snabbdom": "^0.7.1"
+  }
+}
