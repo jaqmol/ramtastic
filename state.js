@@ -11,96 +11,129 @@ import {
   split,
   join,
   append,
+  prepend,
   reject,
   identical,
   ifElse,
   equals,
   F,
   tap,
+  map,
   pipe,
   T,
   always,
   flip,
+  apply,
+  reverse,
+  unapply,
+  converge,
+  useWith,
+  identity,
+  nthArg,
+  head,
+  tail,
+  __,
+  adjust,
+  repeat,
+  length,
+  zip,
+  unnest,
 } from 'ramda'
 
 let _state = null
 let _subscribers = {}
 
-const _assocPointer = o => assoc('pointer', join('.', o.path), o)
-const _getOr = {
-  pointerEqualsGlob: ({pointer}) => equals('*', pointer),
-  completeState: () => _state,
-  stateAtPath: ({fallback, path}) => pathOr(fallback, path, _state),
+// side-effect dependent private functions:
+
+const state = () => _state
+const statePathOr = (fallback, path) => pathOr(fallback, path, _state)
+const stateAssocPath = (path, value) => {
+  _state = assocPath(path, value, _state)
 }
-const _set = {
-  assocOld: o => assoc('old', rPath(o.path, _state), o),
-  oldEqualsValue: ({value, old}) => equals(value, old),
-  assocState: tap(({path, value}) => {
-    _state = assocPath(path, value, _state)
-  }),
-  dispatch: ({path, value, old}) => forEach(
-    pointer => forEach(
-      s => s(path, value, old),
-      propOr([], pointer, _subscribers)
-    ),
-    _set.dispatchPointers(path),
-  ),
-  dispatchPointers: pipe(
-    join('.'),
-    ifElse(
-      equals('*'),
-      always(['*']),
-      flip(append)(['*']),
-    ),
+const subscribersAssoc = (pointer, subscriber) => {
+  _subscribers = assoc(
+    pointer,
+    append(subscriber, propOr([], pointer, subscriber)),
+    _subscribers
   )
 }
-const _subscribe = {
-  assocSubscriber: tap(({ pointer, subscriber }) => {
-    _subscribers = assoc(
-      pointer,
-      append(subscriber, propOr([], pointer, subscriber)),
-      _subscribers
-    )
-  }),
-  removeFn: ({ pointer, subscriber }) => () => {
-    _subscribers = assoc(
-      pointer,
-      reject(identical(subscriber), prop(pointer, _subscribers)),
-      _subscribers
-    )
-  },
+const subscriberRemover = (pointer, subscriber) => () => {
+  _subscribers = assoc(
+    pointer,
+    reject(identical(subscriber), prop(pointer, _subscribers)),
+    _subscribers
+  )
 }
+
+// private functions
+
+const dispatchPointers = pipe(
+  join('.'),
+  ifElse(
+    equals('*'),
+    always(['*']),
+    flip(append)(['*']),
+  ),
+)
+
+const dispatch = pipe(
+  unapply(identity),
+  converge(prepend, [
+    pipe(
+      head,
+      join('.'),
+      ifElse(
+        equals('*'),
+        always(['*']),
+        flip(append)(['*']),
+      ),
+    ),
+    identity
+  ]),
+  apply((pointers, path, value, old) => forEach(
+    pointer => forEach(
+      sfn => sfn(path, value, old),
+      propOr([], pointer, _subscribers)
+    ),
+    pointers,
+  )),
+)
+
+// public functions
 
 const init = value => {
   const old = _state
   _state = value
-  _set.dispatch({path: ['*'], value, old})
+  dispatch(['*'], value, old)
 }
 const path = split('.')
-const getOr = curry(pipe(
-  (fallback, path) => ({fallback, path}),
-  _assocPointer,
-  ifElse(
-    _getOr.pointerEqualsGlob,
-    _getOr.completeState,
-    _getOr.stateAtPath,
-  )
-))
+
+const getOr = ifElse(
+  pipe(nthArg(1), join('.'), equals('*')),
+  state,
+  statePathOr,
+)
 const get = getOr(null)
-const set = curry(pipe(
-  (path, value) => ({ path, value }),
-  _set.assocOld,
+
+const set = pipe(
+  unapply(identity),
+  converge(append, [pipe(head, get), identity]),
   ifElse(
-    _set.oldEqualsValue,
+    pipe(reverse, apply(equals)),
     F,
-    pipe(_set.assocState, _set.dispatch, T)
+    pipe(
+      tap(apply(stateAssocPath)),
+      apply(dispatch),
+      T,
+    ),
   )
-))
-const subscribe = curry(pipe(
-  (path, subscriber) => ({ path, subscriber }),
-  _assocPointer,
-  _subscribe.assocSubscriber,
-  _subscribe.removeFn,
-))
+)
+
+const subscribe = pipe(
+  unapply(identity),
+  adjust(join('.'), 0),
+  tap(apply(subscribersAssoc)),
+  apply(subscriberRemover),
+)
 
 export { init, path, set, get, getOr, subscribe }
