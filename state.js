@@ -5,8 +5,6 @@ import {
   propOr,
   assocPath,
   assoc,
-  curry,
-  compose,
   forEach,
   split,
   join,
@@ -18,7 +16,6 @@ import {
   equals,
   F,
   tap,
-  map,
   pipe,
   T,
   always,
@@ -27,17 +24,10 @@ import {
   reverse,
   unapply,
   converge,
-  useWith,
   identity,
   nthArg,
   head,
-  tail,
-  __,
   adjust,
-  repeat,
-  length,
-  zip,
-  unnest,
 } from 'ramda'
 
 let _state = null
@@ -66,15 +56,6 @@ const subscriberRemover = (pointer, subscriber) => () => {
 }
 
 // private functions
-
-const dispatchPointers = pipe(
-  join('.'),
-  ifElse(
-    equals('*'),
-    always(['*']),
-    flip(append)(['*']),
-  ),
-)
 
 const dispatch = pipe(
   unapply(identity),
