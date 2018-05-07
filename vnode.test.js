@@ -13,8 +13,12 @@ import {
   assocPath,
   __,
   map,
+  forEach,
+  repeat,
+  times,
 } from 'ramda'
 import h from 'snabbdom/h'
+import testData from './test-data'
 
 test('flat vn test', () => {
   const checkbox = n2('input', {props: {type: 'checkbox'}})
@@ -108,13 +112,7 @@ test('vn composability', () => {
 test('vn mappability', () => {
   const listItem = n3('li.list-item', {}, prop('text'))
   const list = n3('ul.list', {}, map(listItem))
-  const data = [
-    { text: 'Giraffe' },
-    { text: 'Elephant' },
-    { text: 'Antelope' },
-    { text: 'Bushbaby' },
-    { text: 'Cheetah' },
-  ]
+  const data = testData(5)
   const resultA = list(data)
   const resultB = h(
     'ul.list',
@@ -122,4 +120,23 @@ test('vn mappability', () => {
     data.map(({text}) => h('li.list-item', {}, text)),
   )
   expect(resultA).toEqual(resultB)
+})
+
+test('vn multiple apply', done => {
+  const listItem = n3('li.list-item', {}, prop('text'))
+  const list = n3('ul.list', {}, map(listItem))
+  const snabbHList = data => h(
+    'ul.list',
+    {},
+    data.map(({text}) => h('li.list-item', {}, text)),
+  )
+  pipe(
+    times(() => testData(11)),
+    forEach(arr => {
+      const resultA = list(arr)
+      const resultB = snabbHList(arr)
+      expect(resultA).toEqual(resultB)
+    }),
+    () => done(),
+  )(11)
 })

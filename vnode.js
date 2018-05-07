@@ -14,6 +14,9 @@ import {
   objOf,
   __,
   juxt,
+  prop,
+  apply,
+  converge,
 } from 'ramda'
 import h from 'snabbdom/h'
 
@@ -46,10 +49,12 @@ const vnode3 = useWith(
   pipe(
     unapply(identity),
     mergeAll,
-    c => (...a) => h(
-      c.sel,
-      c.dataFn(...a),
-      c.childrenFn(...a),
+    c => pipe(
+      converge(
+        unapply(identity),
+        [always(c.sel), c.dataFn, c.childrenFn],
+      ),
+      apply(h),
     ),
   ),
   [
@@ -58,6 +63,24 @@ const vnode3 = useWith(
     ensureContentsFn,
   ],
 )
+
+// Less pointfree version:
+// const vnode3 = useWith(
+//   pipe(
+//     unapply(identity),
+//     mergeAll,
+//     c => (...a) => h(
+//       c.sel,
+//       c.dataFn(...a),
+//       c.childrenFn(...a),
+//     ),
+//   ),
+//   [
+//     ensureSelector,
+//     ensurePropertiesFn,
+//     ensureContentsFn,
+//   ],
+// )
 
 const vnode1 = vnode3(__, {}, null)
 const vnode2 = vnode3(__, __, null)
