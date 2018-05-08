@@ -28,6 +28,8 @@ import {
   nthArg,
   head,
   adjust,
+  curry,
+  pair,
 } from 'ramda'
 
 let _state = null
@@ -96,8 +98,8 @@ const getOr = ifElse(
 )
 const get = getOr(null)
 
-const set = pipe(
-  unapply(identity),
+const set = curry(pipe(
+  pair,
   converge(append, [pipe(head, get), identity]),
   ifElse(
     pipe(reverse, apply(equals)),
@@ -108,13 +110,13 @@ const set = pipe(
       T,
     ),
   )
-)
+))
 
-const subscribe = pipe(
-  unapply(identity),
+const subscribe = curry(pipe(
+  pair,
   adjust(join('.'), 0),
   tap(apply(subscribersAssoc)),
   apply(subscriberRemover),
-)
+))
 
 export { init, path, set, get, getOr, subscribe }
