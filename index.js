@@ -17,11 +17,6 @@ import {
   vnode3 as n3,
 } from './vnode'
 
-import {
-  thunk,
-  h,
-} from 'snabbdom'
-
 export {
   initRender,
   queryFn,
@@ -34,7 +29,4 @@ export {
   n1,
   n2,
   n3,
-
-  thunk,
-  h,
 }
