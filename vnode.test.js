@@ -1,7 +1,5 @@
 import {
-  vnode1 as n1,
-  vnode2 as n2,
-  vnode3 as n3,
+  vnode,
 } from './vnode'
 import {
   path,
@@ -16,24 +14,25 @@ import {
   forEach,
   repeat,
   times,
+  binary,
 } from 'ramda'
 import h from 'snabbdom/h'
 import testData from './test-data'
 
 test('flat vn test', () => {
-  const checkbox = n2('input', {props: {type: 'checkbox'}})
+  const checkbox = vnode('input', {props: {type: 'checkbox'}})
   const resultA = checkbox()
   const resultB = h('input', {props: {type: 'checkbox'}})
   expect(resultA).toEqual(resultB)
 })
 
 test('nested vn test', () => {
-  const listitem = n3('li.list-item', {}, [
-    n3('label', {}, [
-      n2('input', {props: {type: 'checkbox'}}),
+  const listitem = vnode('li.list-item', {}, [
+    vnode('label', {}, [
+      vnode('input', {props: {type: 'checkbox'}}),
       'Text',
     ]),
-    n2('button', {}),
+    vnode('button', {}),
   ])
   const resultA = listitem()
   const resultB = h('li.list-item', {}, [
@@ -47,9 +46,9 @@ test('nested vn test', () => {
 })
 
 test('nested vn with state test', () => {
-  const listitem = n3('li.list-item', {}, [
-    n3('label', {}, [
-      n2('input', pipe(
+  const listitem = vnode('li.list-item', {}, [
+    vnode('label', {}, [
+      vnode('input', pipe(
         propOr(false, 'checked'),
         assocPath(
           path('props.checked'),
@@ -59,7 +58,7 @@ test('nested vn with state test', () => {
       )),
       prop('text'),
     ]),
-    n3('button', {}, 'X'),
+    vnode('button', {}, 'X'),
   ])
   const data = {checked: true, text: 'Say hello!'}
   const resultA = listitem(data)
@@ -77,7 +76,7 @@ test('nested vn with state test', () => {
 })
 
 test('vn composability', () => {
-  const input = n2('input', pipe(
+  const input = vnode('input', pipe(
     propOr(false, 'checked'),
     assocPath(
       path('props.checked'),
@@ -85,12 +84,12 @@ test('vn composability', () => {
       {props: {type: 'checkbox'}},
     )
   ))
-  const label = n3('label', {}, [
+  const label = vnode('label', {}, [
     input,
     prop('text'),
   ])
-  const button = n3('button', {}, 'X')
-  const listItem = n3('li.list-item', {}, [
+  const button = vnode('button', {}, 'X')
+  const listItem = vnode('li.list-item', {}, [
     label,
     button,
   ])
@@ -110,8 +109,8 @@ test('vn composability', () => {
 })
 
 test('vn mappability', () => {
-  const listItem = n3('li.list-item', {}, prop('text'))
-  const list = n3('ul.list', {}, map(listItem))
+  const listItem = vnode('li.list-item', {}, prop('text'))
+  const list = vnode('ul.list', {}, map(listItem))
   const data = testData(5)
   const resultA = list(data)
   const resultB = h(
@@ -123,8 +122,8 @@ test('vn mappability', () => {
 })
 
 test('vn multiple apply', done => {
-  const listItem = n3('li.list-item', {}, prop('text'))
-  const list = n3('ul.list', {}, map(listItem))
+  const listItem = vnode('li.list-item', {}, prop('text'))
+  const list = vnode('ul.list', {}, map(listItem))
   const snabbHList = data => h(
     'ul.list',
     {},

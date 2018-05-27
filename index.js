@@ -12,9 +12,7 @@ import {
   subscribe,
 } from './state'
 import {
-  vnode1 as n1,
-  vnode2 as n2,
-  vnode3 as n3,
+  vnode,
 } from './vnode'
 
 export {
@@ -26,7 +24,5 @@ export {
   get,
   getOr,
   subscribe,
-  n1,
-  n2,
-  n3,
+  vnode,
 }
