@@ -9,6 +9,7 @@ import {
   set,
   get,
   getOr,
+  getAll,
   subscribe,
 } from './state'
 import {
@@ -27,6 +28,7 @@ export {
   set,
   get,
   getOr,
+  getAll,
   subscribe,
   vnode,
   initRoute,
