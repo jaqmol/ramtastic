@@ -1,6 +1,6 @@
 {
   "name": "ramtastic",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Ramda + Snabbdom = Fantastic!",
   "main": "index.js",
   "scripts": {

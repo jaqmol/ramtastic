@@ -14,6 +14,10 @@ import {
 import {
   vnode,
 } from './vnode'
+import {
+  init as initRoute,
+  navigate,
+} from './route'
 
 export {
   initRender,
@@ -25,4 +29,6 @@ export {
   getOr,
   subscribe,
   vnode,
+  initRoute,
+  navigate,
 }
