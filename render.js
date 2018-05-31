@@ -8,6 +8,9 @@ import {
   default as snbdmProps
 } from 'snabbdom/modules/props'
 import {
+  default as snbdmAttrs
+} from 'snabbdom/modules/attributes'
+import {
   default as snbdmStyle
 } from 'snabbdom/modules/style'
 import {
@@ -30,6 +33,7 @@ import {
 const _snbdmPatch = snbdmInit([
   snbdmClass,
   snbdmProps,
+  snbdmAttrs,
   snbdmStyle,
   snbdmEventListeners,
 ])

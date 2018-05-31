@@ -1,4 +1,12 @@
-import { init, path, set, get, getOr, subscribe } from './state'
+import {
+  init,
+  path,
+  set,
+  get,
+  getAll,
+  getOr,
+  subscribe,
+} from './state'
 
 const testState = {
   Archaeplastida: {
@@ -32,6 +40,35 @@ test('get path', () => {
   init(testState)
   const r = get(path('Archaeplastida.Algae.Streptophyta'))
   expect(r).toEqual({ Charales: {}, Embryophyte: {} })
+})
+
+test('get all paths array', () => {
+  init(testState)
+  const allPaths = [
+    path('Archaeplastida.Glaucophyta'),
+    path('Archaeplastida.Rhodophyta'),
+    path('Archaeplastida.Algae.Streptophyta'),
+  ]
+  const rs = getAll(allPaths)
+  expect(rs).toEqual([ {}, {}, { Charales: {}, Embryophyte: {} } ])
+})
+
+test('get all paths object', () => {
+  init(testState)
+  const allPaths = {
+    glauco: path('Archaeplastida.Glaucophyta'),
+    rhodo: path('Archaeplastida.Rhodophyta'),
+    strepto: path('Archaeplastida.Algae.Streptophyta'),
+  }
+  const rs = getAll(allPaths)
+  expect(rs).toEqual({
+    glauco: {},
+    rhodo: {},
+    strepto: {
+      Charales: {},
+      Embryophyte: {}
+    }
+  })
 })
 
 test('get complete state', () => {

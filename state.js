@@ -30,12 +30,17 @@ import {
   adjust,
   curry,
   pair,
+  map,
+  is,
+  toPairs,
+  zipObj,
+  nth,
 } from 'ramda'
 
 let _state = null
 let _subscribers = {}
 
-// side-effect dependent private functions:
+// private functions with side-effects:
 
 const state = () => _state
 const statePathOr = (fallback, path) => pathOr(fallback, path, _state)
@@ -98,6 +103,21 @@ const getOr = ifElse(
 )
 const get = getOr(null)
 
+const getAll = ifElse(
+  is(Array),
+  map(get),
+  pipe(
+    toPairs,
+    converge(
+      zipObj,
+      [
+        map(nth(0)),
+        map(pipe(nth(1), get)),
+      ]
+    )
+  )
+)
+
 const set = curry(pipe(
   pair,
   converge(append, [pipe(head, get), identity]),
@@ -119,4 +139,4 @@ const subscribe = curry(pipe(
   apply(subscriberRemover),
 ))
 
-export { init, path, set, get, getOr, subscribe }
+export { init, path, set, get, getAll, getOr, subscribe }
