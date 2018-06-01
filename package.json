@@ -1,6 +1,6 @@
 {
   "name": "ramtastic",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "description": "Ramda + Snabbdom = Fantastic!",
   "main": "index.js",
   "scripts": {
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "ramda": "^0.25.0",
+    "router5": "^6.2.2",
     "snabbdom": "^0.7.1"
   }
 }
