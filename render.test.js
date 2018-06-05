@@ -1,66 +1,149 @@
 import {
-  init as initRender,
-  queryFn,
-} from './render'
-import {
-  init as initState,
-  get,
-  set,
-  path,
-} from './state'
-import h from 'snabbdom/h'
-import testData from './test-data'
-import {
   pipe,
   forEach,
   times,
+  ifElse,
+  unapply,
+  identity,
+  always,
+  map,
+  is,
+  unless,
+  juxt,
+  not,
+  equals,
+  repeat,
+  concat,
+  zip,
+  forEach,
+  split,
+  head,
+  find,
+  filter,
+  join,
+  length,
 } from 'ramda'
 
-const resetAppDiv = () => {
-  document.body.innerHTML = '<div id="app"></div>'
+let _elementFn = null
+let _renderFn = null
+let _removeSubscriber = null
+let _rootVnode = null
+
+
+function _inequal (oldValue, newValue) {
+  return not(equals(oldValue, newValue))
 }
 
-const greetingComponent = text => h('h1', `Hello ${text}!`)
-const greetingContainerFn = p => () => greetingComponent(get(p))
-
-test('render on setting state path', () => {
-  resetAppDiv()
-  const p = path('hello')
-  const container = greetingContainerFn(p)
-  initRender(queryFn('#app'), container)
-  set(p, 'On Set')
-  expect(document.body.innerHTML).toEqual('<h1>Hello On Set!</h1>')
-})
-
-test('render on initializing state', () => {
-  resetAppDiv()
-  const p = path('hello')
-  const container = greetingContainerFn(p)
-  initRender(queryFn('#app'), container)
-  initState({ hello: 'On Init' })
-  expect(document.body.innerHTML).toEqual('<h1>Hello On Init!</h1>')
-})
-
-test('render repeatedly', done => {
-  resetAppDiv()
-  const renderList = data => h(
-    'ul',
-    {},
-    data.map(({text}) => h('li', {}, text)),
-  )
-  const renderHtml = data => {
-    const li = ({text}) => `<li>${text}</li>`
-    return `<ul>${data.map(li).join('')}</ul>`
+function _equalizeLength (prevCont, nextCont) {
+  const fill = (arr, amount) => concat(arr, repeat(null, amount))
+  const oldLen = prevCont.length
+  const newLen = nextCont.length
+  if (oldLen < newLen) {
+    prevCont = fill(prevCont, newLen - oldLen)
   }
-  const p = path('list')
-  const container = () => renderList(get(p))
-  initRender(queryFn('#app'), container)
-  pipe(
-    times(() => testData(5)),
-    forEach(data => {
-      set(p, data)
-      expect(document.body.innerHTML).toEqual(renderHtml(data))
-    }),
-    () => done(),
-  )(5)
+  if (oldLen > newLen) {
+    nextCont = fill(nextCont, oldLen - newLen)
+  }
+  return [prevCont, nextCont]
+}
+
+function _patchSelector(prevVn, nextVn) {
+  const splitSel = split(/(?=[#\.])/)
+  const prevComps = splitSel(prevVn.selector)
+  const nextComps = splitSel(nextVn.selector)
+  const tag = head(nextComps)
+  if (head(prevComps) !== tag) {
+    const prevElem = prevVn.element
+    const nextElem = document.createElement(tag)
+    while (prevElem.hasChildNodes()) {
+      nextElem.appendChild(prevElem.firstChild)
+    }
+    nextVn.element = nextElem
+  } else {
+    nextVn.element = prevVn.element
+  }
+  const element = nextVn.element
+  const nextId = find(c => c.indexOf('#') === 0, nextComps)
+  if (nextId) {
+    element.id = nextId.slice(1)
+  }
+  const classNames = map(c => c.slice(1), filter(c => c.indexOf('.') === 0, nextComps))
+  if (length(classNames)) {
+    element.className = join(' ', classNames)
+  }
+}
+
+function _patchParameters(prevVn, nextVn) {
+  // TODO: continue here
+}
+
+function _patchContents(prevVn, nextVn) {
+  // TODO: handling of non-VNode instance contents
+  const [prevCont, nextCont] = _equalizeLength(prevVn.contents, nextVn.contents)
+  forEach(apply(_patch), zip(prevCont, nextCont))
+}
+
+function _patch (preVn, nextVn) {
+  const selsInequal = _inequal(preVn.selector, nextVn.selector)
+  const paramsInequal = _inequal(preVn.parameters, nextVn.parameters)
+  if (selsInequal) {
+    _patchSelector(preVn, nextVn)
+    _patchParameters(preVn, nextVn)
+  } else if (!selsInequal && paramsInequal) {
+    _patchParameters(preVn, nextVn)
+  }
+  _patchContents(preVn, nextVn)
+  return nextVn
+}
+
+const _rootPatch = () => {
+  _rootVnode = _patch(_rootVnode, _renderFn())
+}
+
+const ensureFn = arg => typeof arg === 'function'
+  ? arg
+  : () => arg
+
+const ensureArrOfFns = arg => {
+  const arr = !(arg instanceof Array) ? [arg] : arg
+  return arr.map(ensureFn)
+}
+
+function VNode (
+    selector=null,
+    parameters=null,
+    contents=null,
+    element=null
+) {
+  this.selector = selector
+  this.parameters = parameters
+  this.contents = contents
+  this.element = element
+}
+
+const vnode = (selector, parameters=null, contents=null) => {
+  const parametersFn = ensureFn(parameters)
+  const contentsFns = ensureArrOfFns(contents)
+  return (...args) => {
+    const renderParams = parametersFn(...args)
+    const renderContents = contentsFns.map(fn => fn(...args))
+    return new VNode(selector, renderParams, renderContents)
+  }
+}
+
+const queryFn = selector => () => document.querySelector(selector)
+
+const init = (elementFn, renderFn) => {
+  if (!_removeSubscriber) {
+    _removeSubscriber = subscribe(path('*'), _patch)
+  }
+  _elementFn = elementFn
+  _renderFn = renderFn
+  _rootVnode = new VNode(null, null, null, _elementFn())
+}
+
+test('new vnode creation', () => {
+  const render = vnode('div.emphasize')
+  const vn = render({payload: 'data'})
+  console.log(vn)
 })

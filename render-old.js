@@ -57,8 +57,8 @@ const _init = {
   },
 }
 const _docQuery = bind(document.querySelector, document)
-const queryFn = selector => () => _docQuery(selector)
 
+const queryFn = selector => () => _docQuery(selector)
 const init = curry(pipe(
   (elementFn, renderFn) => ({elementFn, renderFn}),
   when(_init.canRemoveSubscriber, _init.removeSubscriber),
